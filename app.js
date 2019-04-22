@@ -22,7 +22,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/api/users', apiusersRouter);
+app.use('/api/users', apiUsersRouter);
 
 //Connect to MongoDB
 mongoose.connect(config.mongodb, { useNewUrlParser: true });
