@@ -5,14 +5,16 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var config = require('./config.dev');
 var mongoose = require('mongoose');
-
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
+var LocalStrategy = require('passport-local').Strategy;
 var passport = require('passport');
+var Users = require('./models/users');
 
+var authRouter = require('./routes/auth');
 var indexRouter = require('./routes/index');
 var apiUsersRouter = require('./routes/api/users');
-
+var apiAuthRouter = require('./routes/api/auth');
 var app = express();
 
 // view engine setup
@@ -25,11 +27,50 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(require('express-session')({
+  //Define the session store
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection
+  }),
+  //Set the secret
+  secret: config.session.secret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    path: '/',
+    domain: config.cookie.domain,
+    //httpOnly: true,
+    //secure: true,
+    maxAge:3600000 //1 hour
+  }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/api/users', apiUsersRouter);
 
 //Connect to MongoDB
 mongoose.connect(config.mongodb, { useNewUrlParser: true });
+
+passport.use(Users.createStrategy());
+passport.serializeUser(function(user, done){
+  done(null,{
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    first_name: user.first_name,
+    last_name: user.last_name
+  });
+});
+
+passport.deserializeUser(function(user, done){
+  done(null, user);
+});
+
+app.use('/api/auth', apiAuthRouter);
+
+app.use('/auth', authRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
