@@ -1,5 +1,13 @@
 var usersApp = (function() {
 
+   
+    return {
+      load: function(){
+        alert('LOADED');
+        viewUsers();
+      }
+    }
+
     function viewUsers(){
 
         let uri = `${window.location.origin}/api/users`;
@@ -18,12 +26,6 @@ var usersApp = (function() {
           console.log(data);
         }
       }
-    
-    return {
-      load: function(){
-        alert('LOADED');
-      }
-    }
   
   })();
 
